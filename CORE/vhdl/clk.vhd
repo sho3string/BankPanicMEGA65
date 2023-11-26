@@ -38,7 +38,6 @@ signal clkfb_main         : std_logic;
 signal clkfb_main_mmcm    : std_logic;
 signal main_clk_mmcm      : std_logic;
 signal video_clk_mmcm     : std_logic;
-
 signal main_locked        : std_logic;
 
 begin

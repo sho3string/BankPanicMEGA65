@@ -24,11 +24,10 @@ port (
    RESET_M2M_N             : in  std_logic;              -- Debounced system reset in system clock domain
 
    -- Share clock and reset with the framework
-   main_clk_o              : out std_logic;              -- Galaga's 18 MHz main clock
-   main_rst_o              : out std_logic;              -- Galaga's reset, synchronized
-   
-   video_clk_o             : out std_logic;              -- video clock 48 MHz
-   video_rst_o             : out std_logic;              -- video reset, synchronized
+   main_clk_o              : out std_logic;              -- 36 MHz main clock
+   main_rst_o              : out std_logic;              -- reset, synchronized
+   video_clk_o             : out std_logic;              
+   video_rst_o             : out std_logic;              
 
    --------------------------------------------------------------------------------------------------------
    -- QNICE Clock Domain
@@ -243,7 +242,8 @@ signal div          : std_logic_vector(2 downto 0);
 signal dim_video    : std_logic;
 signal dsw_a_i      : std_logic_vector(7 downto 0);
 
-signal video_ce     : std_logic;
+signal old_clk      : std_logic;
+signal ce_vid       : std_logic;
 signal video_red    : std_logic_vector(7 downto 0);
 signal video_green  : std_logic_vector(7 downto 0);
 signal video_blue   : std_logic_vector(7 downto 0);
@@ -306,10 +306,7 @@ begin
               main_osm_control_i(C_MENU_MIDWAY_DSWA_1) &
               main_osm_control_i(C_MENU_MIDWAY_DSWA_0);  
    
-  
-   
-            
-   ---------------------------------------------------------------------------------------------
+----------------------------------------------------------------------
    -- main_clk (MiSTer core's clock)
    ---------------------------------------------------------------------------------------------
 
@@ -329,7 +326,7 @@ begin
          
          -- Video output
          -- This is PAL 720x576 @ 50 Hz (pixel clock 27 MHz), but synchronized to main_clk (54 MHz).
-         video_ce_o           => video_ce_o,
+         video_ce_o           => ce_vid,
          video_ce_ovl_o       => open,
          video_red_o          => main_video_red,
          video_green_o        => main_video_green,
@@ -376,13 +373,11 @@ begin
     process (main_clk) -- 36 MHz
     begin
         if rising_edge(main_clk) then
-            --video_ce       <= '0';
-            video_ce_ovl_o <= '0';
+        
+            old_clk    <= ce_vid;
+            video_ce_o <= old_clk and (not ce_vid);
+            div <= std_logic_vector(unsigned(div) + 1); 
             
-            --div <= std_logic_vector(unsigned(div) + 1); --5.14 mhz ( 36/7 )
-            --if div="110" then
-            --   video_ce <= '1'; -- 6 MHz
-            --end if;
             if div(0) = '1' then
                video_ce_ovl_o <= '1'; -- 18 MHz
             end if;
