@@ -67,15 +67,14 @@ entity main is
       
        -- Dipswitches
       dsw_a_i                 : in  std_logic_vector(7 downto 0);
-      dsw_b_i                 : in  std_logic_vector(7 downto 0);
 
       dn_clk_i                : in  std_logic;
-      dn_addr_i               : in  std_logic_vector(15 downto 0);
-      dn_data_i               : in  std_logic_vector(7 downto 0);
+      dn_addr_i               : in  std_logic_vector(26 downto 0);
+      dn_data_i               : in  std_logic_vector(15 downto 0);
       dn_wr_i                 : in  std_logic;
 
       
-      osm_control_i      : in  std_logic_vector(255 downto 0)
+      osm_control_i           : in  std_logic_vector(255 downto 0)
       
    );
 end entity main;
@@ -125,7 +124,9 @@ constant m65_up_crsr       : integer := 73; --Player up
 constant m65_vert_crsr     : integer := 7;  --Player down
 constant m65_left_crsr     : integer := 74; --Player left
 constant m65_horz_crsr     : integer := 2;  --Player right
-constant m65_space         : integer := 60; --Fire
+constant m65_z             : integer := 12; --P1 Push 1
+constant m65_x             : integer := 23; --P1 Push 2
+constant m65_c             : integer := 20; --P1 Push 3
 
 
 -- Pause, credit button & test mode
@@ -136,6 +137,7 @@ constant m65_help          : integer := 67; --Help key
 
 begin
    
+   
     audio_left_o(15) <= not audio(15);
     audio_left_o(14 downto 0) <= signed(audio(14 downto 0));
     audio_right_o(15) <= not audio(15);
@@ -145,100 +147,66 @@ begin
     options(1) <= osm_control_i(C_MENU_OSMDIM);
     flip_screen <= osm_control_i(C_MENU_FLIP);
     
-    -- if pause_cpu is not asserted, it's safe to enter the service/test mode.
-    -- this prevents undesired state of the game when pause_cpu is asserted whilst self_test is enabled.
-    
-    process (clk_main_i)
-        begin
-        if rising_edge(clk_main_i) then
-            if  not pause_cpu then 
-                    self_test <= '1' when not keyboard_n(m65_capslock) else '0';
-            end if;
-  
-        end if;
-    end process;
-
-    i_bosconian : entity work.bosconian
+ 
+    i_u_core : entity work.core
     port map (
     
-    clock_18   => clk_main_i,
-    reset      => reset,
+    clk_sys           => clk_main_i,               -- 36mhz
+    reset             => reset,
     
-    video_r    => video_red_o,
-    video_g    => video_green_o,
-    video_b    => video_blue_o,
+    p1(0)             => keyboard_n(m65_x),        -- p1_push2
+    p1(1)             => '0',                      -- ssw
+    p1(2)             => keyboard_n(m65_5),        -- coin1
+    p1(3)             => keyboard_n(m65_z),        -- p1_push1
+    p1(4)             => keyboard_n(m65_left_crsr),-- p1_left
+    p1(5)             => keyboard_n(m65_horz_crsr),-- p1_right
+    p1(6)             => '0',
+    p1(7)             => '0',
     
-    --video_csync => open,
-    video_hsync_n  => video_hs_o,
-    video_vsync_n  => video_vs_o,
-    video_hblank_n => video_hblank_o,
-    video_vblank_n => video_vblank_o,
+    p2(0)             => keyboard_n(m65_x),        -- p2_push2
+    p2(1)             => keyboard_n(m65_2),        -- p2_sel
+    p2(2)             => keyboard_n(m65_1),        -- p2_sel
+    p2(3)             => keyboard_n(m65_z),        -- p2_push1
+    p2(4)             => keyboard_n(m65_left_crsr),-- p2_left
+    p2(5)             => keyboard_n(m65_horz_crsr),-- p2_right
+    p2(6)             => '0',
+    p2(7)             => '0',
     
-    audio       => audio,
+    p3(0)             => '0',
+    p3(1)             => '0',
+    p3(2)             => '0',
+    p3(3)             => '0',
+    p3(4)             => keyboard_n(m65_s),        -- kw / is this service button ?
+    p3(5)             => keyboard_n(m65_c),        -- p2_push3
+    p3(6)             => keyboard_n(m65_c),        -- p1_push3
+    p3(7)             => '0',
     
-    self_test  => self_test,
-    service    => not keyboard_n(m65_s),
-    coin1      => not keyboard_n(m65_5),
-    coin2      => not keyboard_n(m65_6),
-    start1     => not keyboard_n(m65_1),
-    start2     => not keyboard_n(m65_2),
-    up1        => not joy_1_up_n_i or not keyboard_n(m65_up_crsr),
-    down1      => not joy_1_down_n_i or not keyboard_n(m65_vert_crsr),
-    left1      => not joy_1_left_n_i or not keyboard_n(m65_left_crsr),
-    right1     => not joy_1_right_n_i or not keyboard_n(m65_horz_crsr),
-    fire1      => not joy_1_fire_n_i or not keyboard_n(m65_space),
-    -- player 2 joystick is only active in cocktail/table mode.
-    up2        => not joy_2_up_n_i,
-    down2      => not joy_2_down_n_i,
-    left2      => not joy_2_left_n_i,
-    right2     => not joy_2_right_n_i,
-    fire2      => not joy_2_fire_n_i,
-    
-    -- dip a and b are labelled back to front in MiSTer core, hence this workaround.
-    dip_switch_a    => not dsw_b_i,
-    dip_switch_b    => not dsw_a_i,
-    h_offset   => status(27 downto 24),
-    v_offset   => status(31 downto 28),
-    pause      => pause_cpu or pause_i,
+    dsw               => dsw_a_i,
    
-    --hs_address => hs_address,
-    --hs_data_out => hs_data_out,
-    --hs_data_in => hs_data_in,
-    --hs_write   => hs_write_enable,
+   
+    dn_clk            => dn_clk_i,                 -- rom loading.
+    ioctl_index       => (others => '0'),          -- unused
+    ioctl_download    =>'0',
+    ioctl_wr          => dn_wr_i,
+    ioctl_addr        => dn_addr_i,                
+    ioctl_dout        => dn_data_i,
+  
+    red               => video_red_o,
+    green             => video_green_o,
+    blue              => video_blue_o,
     
-    -- @TODO: ROM loading. For now we will hardcode the ROMs
-    -- No dynamic ROM loading as of yet
-    dn_clk     => dn_clk_i,
-    dn_addr    => dn_addr_i,
-    dn_data    => dn_data_i,
-    dn_wr      => dn_wr_i
+
+    vb                => video_vblank_o,
+    hb                => video_hblank_o,
+    vs                => video_vs_o,
+    hs                => video_hs_o,
+    ce_pix            => video_ce_o,
+    
+    
+    hoffs             => status(27 downto 24),
+    sound             => audio
+    
  );
- 
-    i_pause : entity work.pause
-     generic map (
-     
-        RW  => 3,
-        GW  => 3,
-        BW  => 2,
-        CLKSPD => 18
-        
-     )         
-     port map (
-     
-         clk_sys        => clk_main_i,
-         reset          => reset,
-         user_button    => keyboard_n(m65_p),
-         pause_request  => hs_pause,
-         options        => options,  -- not status(11 downto 10), - TODO, hookup to OSD.
-         OSD_STATUS     => '0',       -- disabled for now - TODO, to OSD
-         r              => video_red_o,
-         g              => video_green_o,
-         b              => video_blue_o,
-         pause_cpu      => pause_cpu,
-         dim_video      => dim_video_o
-         --rgb_out        TODO
-         
-      );
       
    -- @TODO: Keyboard mapping and keyboard behavior
    -- Each core is treating the keyboard in a different way: Some need low-active "matrices", some
