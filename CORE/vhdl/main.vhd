@@ -23,6 +23,8 @@ entity main is
       reset_hard_i            : in  std_logic;
       pause_i                 : in  std_logic;
       dim_video_o             : out std_logic;
+      
+      ioctl_download          : in  std_logic;
 
       -- MiSTer core main clock speed:
       -- Make sure you pass very exact numbers here, because they are used for avoiding clock drift at derived clocks
@@ -154,39 +156,39 @@ begin
     clk_sys           => clk_main_i,               -- 36mhz
     reset             => reset,
     
-    p1(0)             => keyboard_n(m65_x),        -- p1_push2
-    p1(1)             => '0',                      -- ssw
-    p1(2)             => keyboard_n(m65_5),        -- coin1
-    p1(3)             => keyboard_n(m65_z),        -- p1_push1
-    p1(4)             => keyboard_n(m65_left_crsr),-- p1_left
-    p1(5)             => keyboard_n(m65_horz_crsr),-- p1_right
-    p1(6)             => '0',
-    p1(7)             => '0',
+    p1(7)             => keyboard_n(m65_x),        -- p1_push2
+    p1(6)             => '0',                      -- ssw / service.
+    p1(5)             => keyboard_n(m65_5),        -- coin1
+    p1(4)             => keyboard_n(m65_z),        -- p1_push1
+    p1(3)             => keyboard_n(m65_left_crsr),-- p1_left
+    p1(2)             => '0',                      -- unused
+    p1(1)             => keyboard_n(m65_horz_crsr),-- p1_right
+    p1(0)             => '0',                      -- unused
     
-    p2(0)             => keyboard_n(m65_x),        -- p2_push2
-    p2(1)             => keyboard_n(m65_2),        -- p2_sel
-    p2(2)             => keyboard_n(m65_1),        -- p2_sel
-    p2(3)             => keyboard_n(m65_z),        -- p2_push1
-    p2(4)             => keyboard_n(m65_left_crsr),-- p2_left
-    p2(5)             => keyboard_n(m65_horz_crsr),-- p2_right
-    p2(6)             => '0',
-    p2(7)             => '0',
+    p2(7)             => keyboard_n(m65_x),        -- p2_push2 / cocktail
+    p2(6)             => keyboard_n(m65_2),        -- p2_sel
+    p2(5)             => keyboard_n(m65_1),        -- p1_sel
+    p2(4)             => keyboard_n(m65_z),        -- p2_push1 / cocktail
+    p2(3)             => keyboard_n(m65_left_crsr),-- p2_left
+    p2(2)             => '0',                      -- unused
+    p2(1)             => keyboard_n(m65_horz_crsr),-- p2_right
+    p2(0)             => '0',                      -- unused
     
-    p3(0)             => '0',
-    p3(1)             => '0',
-    p3(2)             => '0',
-    p3(3)             => '0',
-    p3(4)             => keyboard_n(m65_s),        -- kw / is this service button ?
-    p3(5)             => keyboard_n(m65_c),        -- p2_push3
-    p3(6)             => keyboard_n(m65_c),        -- p1_push3
-    p3(7)             => '0',
+    p3(7)             => '0',                      -- unused
+    p3(6)             => '0',                      -- unused
+    p3(5)             => '0',                      -- unused
+    p3(4)             => '0',                      -- unused
+    p3(3)             => keyboard_n(m65_s),        -- kw / is this service button ?
+    p3(2)             => keyboard_n(m65_6),        -- coin2
+    p3(1)             => keyboard_n(m65_c),        -- p2_push3 / cocktail
+    p3(0)             => keyboard_n(m65_c),        -- p1_push3
     
     dsw               => dsw_a_i,
    
    
     dn_clk            => dn_clk_i,                 -- rom loading.
     ioctl_index       => (others => '0'),          -- unused
-    ioctl_download    =>'0',
+    ioctl_download    => ioctl_download,
     ioctl_wr          => dn_wr_i,
     ioctl_addr        => dn_addr_i,                
     ioctl_dout        => dn_data_i,

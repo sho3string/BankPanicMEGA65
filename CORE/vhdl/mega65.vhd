@@ -264,6 +264,8 @@ signal qnice_dn_addr    : std_logic_vector(26 downto 0);
 signal qnice_dn_data    : std_logic_vector(15 downto 0);
 signal qnice_dn_wr      : std_logic;
 
+signal ioctl_download   : std_logic;
+
 
 begin
 
@@ -323,6 +325,8 @@ begin
          pause_i              => main_pause_core_i and main_osm_control_i(C_MENU_OSMPAUSE),
          dim_video_o          => dim_video,
          clk_main_speed_i     => CORE_CLK_SPEED,
+         
+         ioctl_download       => ioctl_download,
          
          -- Video output
          -- This is PAL 720x576 @ 50 Hz (pixel clock 27 MHz), but synchronized to main_clk (54 MHz).
@@ -485,22 +489,25 @@ wire        mcpu_rom3_wren_a  = ioctl_download && ioctl_addr < 27'hf000 ? ioctl_
 
          -- Bank Panic ROMs
          when C_DEV_BP_CPU_ROM1 =>
+              ioctl_download <='1';
               qnice_dn_wr   <= qnice_dev_ce_i and qnice_dev_we_i;
               qnice_dn_addr(15 downto 0) <= "00" & qnice_dev_addr_i(13 downto 0);  -- 0000000000000000 - 0011111111111111
               qnice_dn_data(7 downto 0) <= qnice_dev_data_i(7 downto 0);
-              
 
          when C_DEV_BP_CPU_ROM2 =>
+              ioctl_download <='1';
               qnice_dn_wr   <= qnice_dev_ce_i and qnice_dev_we_i;
-              qnice_dn_addr(15 downto 0) <= "01" & qnice_dev_addr_i(13 downto 0);   -- 0100000000000001 - 0111111111111111
+              qnice_dn_addr(15 downto 0) <= "01" & qnice_dev_addr_i(13 downto 0);   -- 0100000000000000 - 0111111111111111
               qnice_dn_data(7 downto 0) <= qnice_dev_data_i(7 downto 0);
               
          when C_DEV_BP_CPU_ROM3 =>
+              ioctl_download <='1';
               qnice_dn_wr   <= qnice_dev_ce_i and qnice_dev_we_i;
-              qnice_dn_addr(15 downto 0) <= "10" & qnice_dev_addr_i(13 downto 0);   -- 1000000000000001 - 1011111111111111
+              qnice_dn_addr(15 downto 0) <= "10" & qnice_dev_addr_i(13 downto 0);   -- 1000000000000000 - 1011111111111111
               qnice_dn_data(7 downto 0) <= qnice_dev_data_i(7 downto 0);     
 
          when C_DEV_BP_CPU_ROM4 =>
+              ioctl_download <='1';
               qnice_dn_wr   <= qnice_dev_ce_i and qnice_dev_we_i;
               qnice_dn_addr(15 downto 0) <= "11" & qnice_dev_addr_i(13 downto 0);   -- 1100000000000000 - 1110111111111111
               qnice_dn_data(7 downto 0) <= qnice_dev_data_i(7 downto 0);
@@ -524,41 +531,49 @@ wire [12:0] gfx_rom8_addr    = ioctl_download ? ioctl_addr - 27'h1e000 : sca[12:
 wire        gfx_rom8_wren_a  = ioctl_download && ioctl_addr >= 27'h1e000 && ioctl_addr < 27'h20000 ? ioctl_wr : 1'b0; */            
              
          when C_DEV_BP_FG1_GFX1 =>
+              ioctl_download <='1';
               qnice_dn_wr   <= qnice_dev_ce_i and qnice_dev_we_i;
               qnice_dn_addr(16 downto 0) <= "1000" & qnice_dev_addr_i(12 downto 0);   -- 0001000 0000000000000 - 0001000 1111111111111
               qnice_dn_data(7 downto 0) <= qnice_dev_data_i(7 downto 0);
          
          when C_DEV_BP_FG2_GFX1 =>
+              ioctl_download <='1';
               qnice_dn_wr  <= qnice_dev_ce_i and qnice_dev_we_i;
               qnice_dn_addr(16 downto 0) <= "1001" & qnice_dev_addr_i(12 downto 0);   -- 0001001 0000000000000 - 0001001 1111111111111
               qnice_dn_data(7 downto 0) <= qnice_dev_data_i(7 downto 0); 
              
          when C_DEV_BP_BG1_GFX2 =>
+              ioctl_download <='1';
               qnice_dn_wr   <= qnice_dev_ce_i and qnice_dev_we_i;
               qnice_dn_addr(16 downto 0) <= "1010" & qnice_dev_addr_i(12 downto 0);   -- 0001010 0000000000000 - 0001010 1111111111111
               qnice_dn_data(7 downto 0) <= qnice_dev_data_i(7 downto 0); 
               
          when C_DEV_BP_BG2_GFX2 =>
+              ioctl_download <='1';
               qnice_dn_wr   <= qnice_dev_ce_i and qnice_dev_we_i;
               qnice_dn_addr(16 downto 0) <= "1011" & qnice_dev_addr_i(12 downto 0);   -- 0001011 0000000000000 - 0001011 1111111111111
               qnice_dn_data(7 downto 0) <= qnice_dev_data_i(7 downto 0);
               
          when C_DEV_BP_BG3_GFX2 =>
+              ioctl_download <='1';
               qnice_dn_wr   <= qnice_dev_ce_i and qnice_dev_we_i;
               qnice_dn_addr(16 downto 0) <= "1100" & qnice_dev_addr_i(12 downto 0);   -- 0001100 0000000000000 - 0001100 1111111111111
               qnice_dn_data(7 downto 0) <= qnice_dev_data_i(7 downto 0);
               
          when C_DEV_BP_BG4_GFX2 =>
+              ioctl_download <='1';
               qnice_dn_wr   <= qnice_dev_ce_i and qnice_dev_we_i;
               qnice_dn_addr(16 downto 0) <= "1101" & qnice_dev_addr_i(12 downto 0);   -- 0001101 0000000000000 - 0001101 1111111111111
               qnice_dn_data(7 downto 0) <= qnice_dev_data_i(7 downto 0);   
          
          when C_DEV_BP_BG5_GFX2 =>
+              ioctl_download <='1';
               qnice_dn_wr   <= qnice_dev_ce_i and qnice_dev_we_i;
               qnice_dn_addr(16 downto 0) <= "1110" & qnice_dev_addr_i(12 downto 0);   -- 0001110 0000000000000 - 0001110 1111111111111
               qnice_dn_data(7 downto 0) <= qnice_dev_data_i(7 downto 0);  
               
          when C_DEV_BP_BG6_GFX2 =>
+              ioctl_download <='1';
               qnice_dn_wr   <= qnice_dev_ce_i and qnice_dev_we_i;
               qnice_dn_addr(16 downto 0) <= "1110" & qnice_dev_addr_i(12 downto 0);   -- 0001111 0000000000000 - 0001111 1111111111111
               qnice_dn_data(7 downto 0) <= qnice_dev_data_i(7 downto 0);
@@ -572,21 +587,25 @@ wire        gfx_rom8_wren_a  = ioctl_download && ioctl_addr >= 27'h1e000 && ioct
 --wire        pal_wren      = ioctl_download && ioctl_addr >= 27'h20000 && ioctl_addr < 27'h20020 ? ioctl_wr : 1'b0;
  
          when C_DEV_BP_PALETTE =>
+              ioctl_download <='1';
               qnice_dn_wr   <= qnice_dev_ce_i and qnice_dev_we_i;
               qnice_dn_addr(17 downto 0) <= "1000000000000" & qnice_dev_addr_i(4 downto 0);  --  0010000 0000000000000 + 0010000 0000000011111
               qnice_dn_data(7 downto 0) <= qnice_dev_data_i(7 downto 0); 
               
          when C_DEV_BP_FGLUT =>
+              ioctl_download <='1';
               qnice_dn_wr   <= qnice_dev_ce_i and qnice_dev_we_i;
               qnice_dn_addr(17 downto 0) <= "1000000000001" & qnice_dev_addr_i(4 downto 0);  --  0010000 0000000100000 + 0010000 0000100011111
               qnice_dn_data(7 downto 0) <= qnice_dev_data_i(7 downto 0);                        
               
          when C_DEV_BP_BGLUT =>
+              ioctl_download <='1';
               qnice_dn_wr   <= qnice_dev_ce_i and qnice_dev_we_i; 
               qnice_dn_addr(17 downto 0) <= "1000000001001" & qnice_dev_addr_i(4 downto 0);  --  0010000 0000100100000 + 0010000 0001000011111
               qnice_dn_data(7 downto 0) <= qnice_dev_data_i(7 downto 0);     
               
          when others => null;
+              ioctl_download <='0';
       end case;
 
       if qnice_rst_i = '1' then
